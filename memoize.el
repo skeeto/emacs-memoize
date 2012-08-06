@@ -1,5 +1,4 @@
-;; -*-lexical-binding: t; -*-
-;;; memoize.el --- memoize elisp functions
+;;; memoize.el --- memoize elisp functions -*- lexical-binding: t; -*-
 
 ;; Written by Christopher Wellons <mosquitopsu@gmail.com>
 ;; This program is public domain.
@@ -23,6 +22,8 @@
 ;; memoization wrapper anyway.
 
 ;;; Code:
+
+(eval-when-compile (require 'cl))
 
 (defun memoize (func)
   "Memoize the given function. If argument is a symbol then
