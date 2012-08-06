@@ -1,7 +1,10 @@
-;;; memoize.el --- memoize elisp functions -*- lexical-binding: t; -*-
+;;; memoize.el --- Memoization functions -*- lexical-binding: t; -*-
 
-;; Written by Christopher Wellons <mosquitopsu@gmail.com>
-;; This program is public domain.
+;; This is free and unencumbered software released into the public domain.
+
+;; Author: Christopher Wellons <mosquitopsu@gmail.com>
+;; URL: https://github.com/skeeto/emacs-memoize
+;; Version: 1.0
 
 ;;; Commentary:
 
