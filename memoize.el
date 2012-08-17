@@ -35,12 +35,12 @@ install the memoized function over the original function."
     (symbol
      (put func 'function-documentation
           (concat (documentation func) " (memoized)"))
-     (fset func (memoize-wrap (symbol-function func)))
+     (fset func (memoize--wrap (symbol-function func)))
      func)
-    (function (memoize-wrap func))))
+    (function (memoize--wrap func))))
 
 ;; ID: 83bae208-da65-3e26-2ecb-4941fb310848
-(defun memoize-wrap (func)
+(defun memoize--wrap (func)
   "Return the memoized version of FUNC."
   (let ((table (make-hash-table :test 'equal)))
     (lambda (&rest args)
