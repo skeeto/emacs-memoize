@@ -15,10 +15,10 @@
 
 ;;     (memoize 'my-expensive-function)
 
-;; `memoize-defmemo' defines a memoized function directly, behaving
-;; just like `defun'.
+;; `defmemoize' defines a memoized function directly, behaving just
+;; like `defun'.
 
-;;     (memoize-defmemo my-expensive-function (x)
+;;     (defmemoize my-expensive-function (x)
 ;;       (if (zerop n)
 ;;           1
 ;;         (* n (my-expensive-function (1- n)))))
@@ -64,7 +64,7 @@ install the memoized function over the original function."
             value
           (puthash args (apply func args) table))))))
 
-(defmacro memoize-defmemo (name arglist &rest body)
+(defmacro defmemoize (name arglist &rest body)
   "Create a memoize'd function. NAME, ARGLIST, DOCSTRING and BODY
 have the same meaning as in `defun'."
   (declare (indent defun))
