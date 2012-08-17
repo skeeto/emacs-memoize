@@ -49,6 +49,16 @@ install the memoized function over the original function."
             value
           (puthash args (apply func args) table))))))
 
+(defmacro memoize-defmemo (name arglist &optional docstring &rest body)
+  "Create a memoize'd function. NAME, ARGLIST, DOCSTRING and BODY
+have the same meaning as in `defun'."
+  (declare (indent defun))
+  `(progn
+     (defun ,name ,arglist
+       ,docstring
+       ,@body)
+     (memoize (quote ,name))))
+
 (provide 'memoize)
 
 ;;; memoize.el ends here
