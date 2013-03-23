@@ -17,3 +17,8 @@ functions:
       1
     (* n (my-expensive-function (1- n)))))
 ```
+
+Some functions are run over buffer contents, and need to be cached
+only so long as the buffer contents do not change. For these
+use-cases, we have the function `memoize-by-buffer-contents` as well
+as the `defmemoize-by-buffer-contents` macro.
