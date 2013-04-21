@@ -89,9 +89,10 @@ care."
             (when existing-timer
               (cancel-timer existing-timer))
             (when timeout-to-use
-              (puthash args (run-at-time timeout-to-use nil
-                                         (lambda ()
-                                           (remhash args table))) timeouts))))))))
+              (puthash args
+                       (run-at-time timeout-to-use nil
+                                    (lambda ()
+                                      (remhash args table))) timeouts))))))))
 
 (defmacro defmemoize (name arglist &rest body)
   "Create a memoize'd function. NAME, ARGLIST, DOCSTRING and BODY
