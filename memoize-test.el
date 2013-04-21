@@ -1,5 +1,7 @@
 ;;; Tests for memoize.el -*- lexical-binding: t; -*-
 
+(require 'ert)
+
 (defvar numcalls 0)
 
 (ert-deftest memoize ()
