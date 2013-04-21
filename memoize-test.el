@@ -38,3 +38,19 @@
       (testfunc 2)
       (should (eq 3 numcalls)))))
 
+
+(ert-deftest memoize-by-buffer-contents ()
+  (defun testfunc (arg1 arg2) (incf numcalls))
+  (let ((f (memoize-by-buffer-contents--wrap #'testfunc)))
+    (setq numcalls 0)
+    (with-temp-buffer
+      (funcall f 0 0)
+      (should (eq  1 numcalls))
+      (funcall f 0 1)
+      (should (eq 2 numcalls))
+      (funcall f 0 0)
+      (should (eq 2 numcalls))
+      (insert "hello world")
+      (funcall f 0 0)
+      (should (eq 3 numcalls)))))
+

@@ -103,6 +103,70 @@ have the same meaning as in `defun'."
        ,@body)
      (memoize (quote ,name))))
 
+(defun memoize-by-buffer-contents (func)
+    "Memoize the given function by buffer contents. If argument
+is a symbol then install the memoized function over the original
+function."
+  (typecase func
+    (symbol
+     (put func 'function-documentation
+          (concat (documentation func) " (memoized by buffer contents)"))
+     (fset func (memoize-by-buffer-contents--wrap (symbol-function func)))
+     func)
+    (function (memoize-by-buffer-contents--wrap func))))
+
+(defun memoize-by-buffer-contents--wrap (func)
+  "Return the memoization based on the buffer contents of FUNC.
+
+This form of memoization will be based off the current buffer
+contents. A different memoization is stored for all buffer
+contents, although old contents and no-longer-existant buffers
+will get garbage collected."
+  ;; We need 3 tables here to properly garbage collect. First is the
+  ;; table for the memoization itself, `memoization-table'. It holds a
+  ;; cons of the content hash and the function arguments.
+  ;;
+  ;; Buffer contents change often, though, so we want these entries to
+  ;; be automatically garbage collected when the buffer changes or the
+  ;; buffer goes away. To keep the entries around, we need to tie the
+  ;; content hash to the buffer, so that the content hash string
+  ;; doesn't go away until the buffer does. We do that with the
+  ;; `buffer-to-contents-table'.
+  ;;
+  ;; But even if the buffer content does change, we need to expire the
+  ;; memoization entries for that particular buffer content. So we
+  ;; have a `contents-to-memoization-table' that we use to tie the
+  ;; content hash to the memoization conses used as keys in the
+  ;; `memoization-table'.
+  ;;
+  ;; If a buffer's value changes, we make sure the next time we put a
+  ;; new value at the `buffer-to-contents-table', which causes the
+  ;; hash string to disappear. This causes the hash-string to
+  ;; disappear from the `contents-to-memoization-table', which causes
+  ;; the memoizations based on that content string to disappear from
+  ;; the `memoization-table'.
+  (let ((memoization-table (make-hash-table :test 'equal :weakness 'key))
+        (buffer-to-contents-table (make-hash-table :weakness 'key))
+        (contents-to-memoization-table (make-hash-table :weakness 'key)))
+    (lambda (&rest args)
+      (let* ((bufhash (secure-hash 'md5 (buffer-string)))
+             (memokey (cons bufhash args))
+             (value (gethash memokey memoization-table)))
+        (or value
+            (progn
+              (puthash (current-buffer) bufhash buffer-to-contents-table)
+              (puthash bufhash memokey contents-to-memoization-table)
+              (puthash memokey (apply func args) memoization-table)))))))
+
+(defmacro defmemoize-by-buffer-contents (name arglist &rest body)
+  "Create a memoize'd-by-buffer-contents function. NAME, ARGLIST,
+DOCSTRING and BODY have the same meaning as in `defun'."
+  (declare (indent defun))
+  `(progn
+     (defun ,name ,arglist
+       ,@body)
+     (memoize-by-buffer-contents (quote ,name))))
+
 (provide 'memoize)
 
 ;;; memoize.el ends here
