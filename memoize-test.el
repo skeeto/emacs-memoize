@@ -54,3 +54,32 @@
       (funcall f 0 0)
       (should (eq 3 numcalls)))))
 
+(ert-deftest memoize-nil ()
+  (let ((f (memoize (lambda (arg1 arg2)
+                      (incf numcalls)
+                      (if (= arg1 99) nil (+ arg1 arg2))))))
+    (setq numcalls 0)
+    (funcall f 99 1)
+    (should (eq nil (funcall f 99 1)))
+    (should (eq 1 numcalls))
+    (funcall f 98 2)
+    (should (eq 100 (funcall f 98 2)))
+    (should (eq 2 numcalls))))
+
+(ert-deftest memoize-nil-by-buffer-contents ()
+  (let ((f (memoize-by-buffer-contents--wrap
+            (lambda (arg1 arg2)
+              (incf numcalls)
+              (if (= arg1 99) nil (+ arg1 arg2))))))
+    (setq numcalls 0)
+    (with-temp-buffer
+      (funcall f 99 1)
+      (should (eq nil (funcall f 99 1)))
+      (should (eq 1 numcalls))
+      (funcall f 98 2)
+      (should (eq 100 (funcall f 98 2)))
+      (should (eq 2 numcalls))
+      (insert "hello world")
+      (funcall f 98 2)
+      (should (eq 3 numcalls)))))
+
