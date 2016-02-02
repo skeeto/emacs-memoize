@@ -30,9 +30,6 @@
 ;; care to deal with. Besides, interactive functions are always used
 ;; for their side effects anyway.
 
-;; There's no way to memoize nil returns, but why would your expensive
-;; functions do all that work just to return nil? :-)
-
 ;; Memoization takes up memory, which should be freed at some point.
 ;; Because of this, all memoization has a timeout from when the last
 ;; access was. The default timeout is set by
@@ -79,11 +76,13 @@ nil timeout will cause the values to never expire, which will
 cause a memory leak as memoize is use, so use the nil value with
 care."
   (let ((table (make-hash-table :test 'equal))
-        (timeouts (make-hash-table :test 'equal)))
+        (timeouts (make-hash-table :test 'equal))
+        (sentinel (make-symbol "sentinel")))
     (lambda (&rest args)
-      (let ((value (gethash args table)))
+      (let ((value (gethash args table sentinel)))
         (unwind-protect
-            (or value (puthash args (apply func args) table))
+            (if (eq value sentinel) (puthash args (apply func args) table)
+              value)
           (let ((existing-timer (gethash args timeouts))
                 (timeout-to-use (or timeout memoize-default-timeout)))
             (when existing-timer
@@ -147,16 +146,18 @@ will get garbage collected."
   ;; the `memoization-table'.
   (let ((memoization-table (make-hash-table :test 'equal :weakness 'key))
         (buffer-to-contents-table (make-hash-table :weakness 'key))
-        (contents-to-memoization-table (make-hash-table :weakness 'key)))
+        (contents-to-memoization-table (make-hash-table :weakness 'key))
+        (sentinel (make-symbol "sentinel")))
     (lambda (&rest args)
       (let* ((bufhash (secure-hash 'md5 (buffer-string)))
              (memokey (cons bufhash args))
-             (value (gethash memokey memoization-table)))
-        (or value
+             (value (gethash memokey memoization-table sentinel)))
+        (if (eq value sentinel)
             (progn
               (puthash (current-buffer) bufhash buffer-to-contents-table)
               (puthash bufhash memokey contents-to-memoization-table)
-              (puthash memokey (apply func args) memoization-table)))))))
+              (puthash memokey (apply func args) memoization-table))
+          value)))))
 
 (defmacro defmemoize-by-buffer-contents (name arglist &rest body)
   "Create a memoize'd-by-buffer-contents function. NAME, ARGLIST,
