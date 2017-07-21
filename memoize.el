@@ -4,7 +4,7 @@
 
 ;; Author: Christopher Wellons <mosquitopsu@gmail.com>
 ;; URL: https://github.com/skeeto/emacs-memoize
-;; Version: 1.0.1
+;; Version: 1.1
 
 ;;; Commentary:
 
@@ -48,7 +48,7 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
+(require 'cl-lib)
 
 (defvar memoize-default-timeout "2 hours"
   "The amount of time after which to remove a memoization.
@@ -58,12 +58,14 @@ expire, which will cause a memory leak, but may be acceptable for
 very careful uses.")
 
 (defun memoize (func &optional timeout)
-  "Memoize the given function. If argument is a symbol then
-install the memoized function over the original function. The
-TIMEOUT value, a timeout string as used by `run-at-time' will
-determine when the value expires, and will apply after the last
-access (unless another access happens)."
-  (typecase func
+  "Memoize FUNC: a closure, lambda, or symbol.
+
+If argument is a symbol then install the memoized function over
+the original function. The TIMEOUT value, a timeout string as
+used by `run-at-time' will determine when the value expires, and
+will apply after the last access (unless another access
+happens)."
+  (cl-typecase func
     (symbol
      (put func 'function-documentation
           (concat (documentation func) " (memoized)"))
@@ -71,7 +73,6 @@ access (unless another access happens)."
      func)
     (function (memoize--wrap func timeout))))
 
-;; ID: 83bae208-da65-3e26-2ecb-4941fb310848
 (defun memoize--wrap (func timeout)
   "Return the memoized version of FUNC.
 TIMEOUT specifies how long the values last from last access. A
@@ -104,10 +105,10 @@ have the same meaning as in `defun'."
      (memoize (quote ,name))))
 
 (defun memoize-by-buffer-contents (func)
-    "Memoize the given function by buffer contents. If argument
-is a symbol then install the memoized function over the original
-function."
-  (typecase func
+    "Memoize the given function by buffer contents.
+If argument is a symbol then install the memoized function over
+the original function."
+  (cl-typecase func
     (symbol
      (put func 'function-documentation
           (concat (documentation func) " (memoized by buffer contents)"))
