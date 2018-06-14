@@ -22,3 +22,11 @@ Some functions are run over buffer contents, and need to be cached
 only so long as the buffer contents do not change. For these
 use-cases, we have the function `memoize-by-buffer-contents` as well
 as the `defmemoize-by-buffer-contents` macro.
+
+To restore the original definition of a memoized function symbol (not
+a lambda or closure), use `memoize-restore`:
+
+```cl
+(memoize 'my-function)
+(memoize-restore 'my-function)
+```

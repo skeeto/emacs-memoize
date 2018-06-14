@@ -67,11 +67,26 @@ will apply after the last access (unless another access
 happens)."
   (cl-typecase func
     (symbol
+     (when (get func :memoize-original-function)
+       (user-error "%s is already memoized" func))
+     (put func :memoize-original-documentation (documentation func))
      (put func 'function-documentation
           (concat (documentation func) " (memoized)"))
+     (put func :memoize-original-function (symbol-function func))
      (fset func (memoize--wrap (symbol-function func) timeout))
      func)
     (function (memoize--wrap func timeout))))
+
+(defun memoize-restore (func)
+  "Restore the original, non-memoized definition of FUNC.
+FUNC should be a symbol which has been memoized with `memoize'."
+  (unless (get func :memoize-original-function)
+    (user-error "%s is not memoized" func))
+  (fset func (get func :memoize-original-function))
+  (put func :memoize-original-function nil)
+  (put func 'function-documentation
+       (get func :memoize-original-documentation))
+  (put func :memoize-original-documentation nil))
 
 (defun memoize--wrap (func timeout)
   "Return the memoized version of FUNC.
