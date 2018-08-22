@@ -60,11 +60,10 @@ very careful uses.")
 (defun memoize (func &optional timeout)
   "Memoize FUNC: a closure, lambda, or symbol.
 
-If argument is a symbol then install the memoized function over
-the original function. The TIMEOUT value, a timeout string as
-used by `run-at-time' will determine when the value expires, and
-will apply after the last access (unless another access
-happens)."
+If argument is a symbol, install the memoized function over the
+original function. The TIMEOUT value, a timeout string as used by
+`run-at-time' will determine when the value expires, and will
+apply after the last access (unless another access happens)."
   (cl-typecase func
     (symbol
      (when (get func :memoize-original-function)
@@ -79,7 +78,7 @@ happens)."
 
 (defun memoize-restore (func)
   "Restore the original, non-memoized definition of FUNC.
-FUNC should be a symbol which has been memoized with `memoize'."
+FUNC is a symbol which has been memoized with `memoize'."
   (unless (get func :memoize-original-function)
     (user-error "%s is not memoized" func))
   (fset func (get func :memoize-original-function))
@@ -110,6 +109,48 @@ care."
                                     (lambda ()
                                       (remhash args table))) timeouts))))))))
 
+(cl-defun memoize-by-key (func key &key (test #'equal))
+  "Memoize FUNC, a closure, lambda, or symbol, by KEY.
+
+If FUNC is a symbol, install the memoized function over the
+original function.
+
+KEY is a function taking the same arguments as FUNC, although it
+may ignore them.  It returns a value to be used as a hash-table
+key to cache the return value of FUNC.
+
+TEST is a hash-table test that correctly compares the return
+value of KEY.  The default, `equal', will usually work."
+  (cl-typecase func
+    (symbol (when (get func :memoize-original-function)
+              (user-error "%s is already memoized" func))
+            (put func :memoize-original-documentation (documentation func))
+            (put func 'function-documentation
+                 (concat (documentation func) " (memoized)"))
+            (put func :memoize-original-function (symbol-function func))
+            (fset func (memoize-by-key--wrap (symbol-function func) key test))
+            func)
+    (function (memoize-by-key--wrap func key test))))
+
+(cl-defun memoize-by-key--wrap (func key &optional (test #'equal))
+  "Return FUNC memoized by KEY using hash-table TEST.
+
+KEY is a function taking the same arguments as FUNC, although it
+may ignore them.  It returns a value to be used as a hash-table
+key to cache the return value of FUNC.
+
+TEST is a hash-table test that correctly compares the return
+value of KEY.  The default, `equal', will usually work."
+  (let ((table (make-hash-table :test test)))
+    (lambda (&rest args)
+      (let* ((key (apply key args))
+             (cached-result (gethash key table))
+             (return (or cached-result
+                         (puthash key (or (apply func args) 'memoize-by-key--nil) table))))
+        (pcase return
+          ('memoize-by-key--nil nil)
+          (_ return))))))
+
 (defmacro defmemoize (name arglist &rest body)
   "Create a memoize'd function. NAME, ARGLIST, DOCSTRING and BODY
 have the same meaning as in `defun'."
@@ -120,9 +161,9 @@ have the same meaning as in `defun'."
      (memoize (quote ,name))))
 
 (defun memoize-by-buffer-contents (func)
-    "Memoize the given function by buffer contents.
-If argument is a symbol then install the memoized function over
-the original function."
+  "Memoize the given function by buffer contents.
+If argument is a symbol, install the memoized function over the
+original function."
   (cl-typecase func
     (symbol
      (put func 'function-documentation
