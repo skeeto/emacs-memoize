@@ -1,0 +1,35 @@
+* memoize.el
+
+This package provides functions and macros that memoize Emacs Lisp functions.
+
+** Installation
+
+Install =memoize= from [[http://melpa.org][MELPA]], or put =memoize.el= in your =load-path=.
+
+** Usage
+
+Load the package with ~(require 'memoize)~, then use these functions and macros:
+
+*** Functions
+
++  ~memoize FUNC &optional TIMEOUT~ ::
+  
+  Memoize ~FUNC~: a closure, lambda, or symbol.
+
+  If argument is a symbol, install the memoized function over the original function. The ~TIMEOUT~ value, a timeout string as used by =run-at-time= will determine when the value expires, and will apply after the last access (unless another access happens).
++  ~memoize-by-buffer-contents FUNC~ :: Memoize the given function by buffer contents.  If argument is a symbol, install the memoized function over the original function.
++  ~memoize-by-key FUNC KEY &key TEST~ ::
+
+  Memoize ~FUNC~, a closure, lambda, or symbol, by ~KEY~.
+
+  If ~FUNC~ is a symbol, install the memoized function over the original function.
+
+   ~KEY~ is a function taking the same arguments as ~FUNC~, although it may ignore them.  It returns a value to be used as a hash-table key to cache the return value of ~FUNC~.
+
+   ~TEST~ is a hash-table test that correctly compares the return value of ~KEY~.  The default, =equal=, will usually work.
++  ~memoize-restore FUNC~ :: Restore the original, non-memoized definition of ~FUNC~. ~FUNC~ is a symbol which has been memoized with =memoize=.
+
+*** Macros
+
++  ~defmemoize NAME ARGLIST &rest BODY~ :: Create a memoized function. ~NAME~, ~ARGLIST~, ~DOCSTRING~ and ~BODY~ have the same meaning as in =defun=.
++  ~defmemoize-by-buffer-contents NAME ARGLIST &rest BODY~ :: Create a memoized-by-buffer-contents function. ~NAME~, ~ARGLIST~, ~DOCSTRING~ and ~BODY~ have the same meaning as in =defun=.

@@ -60,11 +60,10 @@ very careful uses.")
 (defun memoize (func &optional timeout)
   "Memoize FUNC: a closure, lambda, or symbol.
 
-If argument is a symbol then install the memoized function over
-the original function. The TIMEOUT value, a timeout string as
-used by `run-at-time' will determine when the value expires, and
-will apply after the last access (unless another access
-happens)."
+If argument is a symbol, install the memoized function over the
+original function. The TIMEOUT value, a timeout string as used by
+`run-at-time' will determine when the value expires, and will
+apply after the last access (unless another access happens)."
   (cl-typecase func
     (symbol
      (when (get func :memoize-original-function)
@@ -79,7 +78,7 @@ happens)."
 
 (defun memoize-restore (func)
   "Restore the original, non-memoized definition of FUNC.
-FUNC should be a symbol which has been memoized with `memoize'."
+FUNC is a symbol which has been memoized with `memoize'."
   (unless (get func :memoize-original-function)
     (user-error "%s is not memoized" func))
   (fset func (get func :memoize-original-function))
@@ -162,9 +161,9 @@ have the same meaning as in `defun'."
      (memoize (quote ,name))))
 
 (defun memoize-by-buffer-contents (func)
-    "Memoize the given function by buffer contents.
-If argument is a symbol then install the memoized function over
-the original function."
+  "Memoize the given function by buffer contents.
+If argument is a symbol, install the memoized function over the
+original function."
   (cl-typecase func
     (symbol
      (put func 'function-documentation
