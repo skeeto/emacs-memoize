@@ -110,6 +110,48 @@ care."
                                     (lambda ()
                                       (remhash args table))) timeouts))))))))
 
+(cl-defun memoize-by-key (func key &key (test #'equal))
+  "Memoize FUNC, a closure, lambda, or symbol, by KEY.
+
+If FUNC is a symbol, install the memoized function over the
+original function.
+
+KEY is a function taking the same arguments as FUNC, although it
+may ignore them.  It returns a value to be used as a hash-table
+key to cache the return value of FUNC.
+
+TEST is a hash-table test that correctly compares the return
+value of KEY.  The default, `equal', will usually work."
+  (cl-typecase func
+    (symbol (when (get func :memoize-original-function)
+              (user-error "%s is already memoized" func))
+            (put func :memoize-original-documentation (documentation func))
+            (put func 'function-documentation
+                 (concat (documentation func) " (memoized)"))
+            (put func :memoize-original-function (symbol-function func))
+            (fset func (memoize-by-key--wrap (symbol-function func) key test))
+            func)
+    (function (memoize-by-key--wrap func key test))))
+
+(cl-defun memoize-by-key--wrap (func key &optional (test #'equal))
+  "Return FUNC memoized by KEY using hash-table TEST.
+
+KEY is a function taking the same arguments as FUNC, although it
+may ignore them.  It returns a value to be used as a hash-table
+key to cache the return value of FUNC.
+
+TEST is a hash-table test that correctly compares the return
+value of KEY.  The default, `equal', will usually work."
+  (let ((table (make-hash-table :test test)))
+    (lambda (&rest args)
+      (let* ((key (apply key args))
+             (cached-result (gethash key table))
+             (return (or cached-result
+                         (puthash key (or (apply func args) 'memoize-by-key--nil) table))))
+        (pcase return
+          ('memoize-by-key--nil nil)
+          (_ return))))))
+
 (defmacro defmemoize (name arglist &rest body)
   "Create a memoize'd function. NAME, ARGLIST, DOCSTRING and BODY
 have the same meaning as in `defun'."
