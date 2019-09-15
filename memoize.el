@@ -18,7 +18,7 @@
 ;; `defmemoize' defines a memoized function directly, behaving just
 ;; like `defun'.
 
-;;     (defmemoize my-expensive-function (x)
+;;     (defmemoize my-expensive-function (n)
 ;;       (if (zerop n)
 ;;           1
 ;;         (* n (my-expensive-function (1- n)))))
