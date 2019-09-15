@@ -12,7 +12,7 @@ The macro `defmemoize` is also provided to directly create memoized
 functions:
 
 ```cl
-(defmemoize my-expensive-function (x)
+(defmemoize my-expensive-function (n)
   (if (zerop n)
       1
     (* n (my-expensive-function (1- n)))))
