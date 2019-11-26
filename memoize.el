@@ -36,7 +36,7 @@
 ;; Memoization takes up memory, which should be freed at some point.
 ;; Because of this, all memoization has a timeout from when the last
 ;; access was. The default timeout is set by
-;; `memoize-default-timeout'.  It can be overriden by using the
+;; `memoize-default-timeout'.  It can be overridden by using the
 ;; `memoize' function, but the `defmemoize' macro will always just use
 ;; the default timeout.
 
