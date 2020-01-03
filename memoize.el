@@ -113,7 +113,7 @@ care."
 (defmacro defmemoize (name arglist &rest body)
   "Create a memoize'd function. NAME, ARGLIST, DOCSTRING and BODY
 have the same meaning as in `defun'."
-  (declare (indent defun) (doc-string 3) (debug defun))
+  (declare (indent 2) (doc-string 3) (debug defun))
   `(progn
      (defun ,name ,arglist
        ,@body)
