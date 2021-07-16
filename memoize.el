@@ -115,6 +115,11 @@ care."
 have the same meaning as in `defun'."
   (declare (indent 2) (doc-string 3) (debug defun))
   `(progn
+     ;; If the function is already memoized, first undo memoization.  Otherwise,
+     ;; the function will not be memoized after it is redefined since there is
+     ;; already a :memoize-original-function property on the symbol name.
+     (when (get ',name :memoize-original-function)
+       (memoize-restore ',name))
      (defun ,name ,arglist
        ,@body)
      (memoize (quote ,name))))
